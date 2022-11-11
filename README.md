@@ -1,24 +1,25 @@
-# Frobnicator (this is a template)
+# Diamond Rust
 
 ## Authors
-- Andrzej Głuszak (@agluszak on GitHub)
-- Linus Torvalds (@torvalds on GitHub)
+- Krystyna Gasińska (@monty930 on GitHub)
 
 ## Description
-Frobnicator is going to be a platformer game similar to Super Mario Bros made using Bevy game engine.
+The idea is to create a game similar to „Diamond rush” (the game that used to be on old cellphones). It would have one level, diamonds to collect (points), enemies to avoid (without combat system), lives, keys to collect, doors opened by keys, bushes to destroy and falling stones. 
+Gameplay of original game: https://www.youtube.com/watch?v=W5jp-VyLEHY
+Unlike the original game there won’t be fire, hammer (to distroy brittle obstacles) or chests. The stones will fall only if there is nothing below them.
 
 ## Features
-- map generator
-- shooting
-- enemy AI
-- game state saving and loading
 - scores
+- enemies
+- game state saving and loading
+- falling stones
+- system of keys and doors
 
 ## Plan
-In the first part we're going to implement the basics: movement, physics and shooting. The enemies will simply bounce from one edge of the platform to the other. There will be only a single map.
+In the first part I'm going to implement the map with diamonds, bushes, keys and doors.
 
-In the second part we're going to add random map generator, saving/loading, scores and a more sophisticated AI.
+In the second part I'm going to add enemies, lives, stones and saving-loading system.
 
 ## Libraries
 - Bevy
-- Serde (for serialization)
+- Serde
