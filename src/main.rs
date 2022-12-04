@@ -2,6 +2,9 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 
 pub const RESOLUTION: f32 = 16.0 / 9.0;
 
+mod debug;
+use debug::DebugPlugin;
+
 fn main() {
     let height = 900.0;
     App::new()
@@ -13,10 +16,11 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
+        .add_plugins(DefaultPlugins)
+        .add_plugin(DebugPlugin)
         .add_startup_system(create_camera)
         .add_startup_system(spawn_player)
         .add_startup_system_to_stage(StartupStage::PreStartup, load_textures)
-        .add_plugins(DefaultPlugins)
         .run();
 }
 
