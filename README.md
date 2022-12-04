@@ -24,3 +24,6 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 ## Libraries
 - Bevy
 - Serde
+
+## Credits
+Player assets thanks to: https://edermunizz.itch.io/pixel-art-rpg-character-creator
