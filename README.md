@@ -29,7 +29,7 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 - Player movement. Player is moving to adjacent "grass" tiles. The non-continous movement (moving from one tile directly to the next one) is intentional.
 - Map creation. The map is created before the game and consists of wall (obstacles) and grass. The arrangement of tiles is determined by the text file (/assets/map.txt). The player can move only on "grass" tiles.
 - Bushes. Bushes occur on the map. They disapear when being stepped by the player.
-- TODO: Keys.
+- Keys. There are silver and gold keys to be found on the map. Player can collect them (they disapear from the map and appear in the player inventory).
 - TODO: Doors.
 
 ## Credits

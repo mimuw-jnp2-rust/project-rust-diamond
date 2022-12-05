@@ -1,10 +1,12 @@
-use bevy::{prelude::*, sprite::collide_aabb::collide};
+use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
+use crate::bushes::BushCollider;
+use crate::keys::SilverKeyDetect;
+use crate::keys::GoldKeyDetect;
 use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
 use crate::worldmap::WallColider;
-use crate::bushes::BushCollider;
 use crate::TILE_SIZE;
 
 pub const PLAYER_SPEED: f32 = 10.0;
@@ -30,13 +32,15 @@ pub struct Player {
     last_down_movement: f32,
     last_right_movement: f32,
     last_left_movement: f32,
+    unchecked_movement: bool,
 }
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
-            .add_system(camera_follow.after("player_movement"))
-            .add_system(player_movement.label("player_movement"));
+            .add_system(camera_follow.after("player_movement").label("camera_follow"))
+            .add_system(player_movement.label("player_movement"))
+            .add_system(player_interractions.after("camera_follow"));
     }
 }
 
@@ -61,6 +65,7 @@ fn spawn_player(mut commands: Commands, texture: Res<CharacterTextures>) {
             last_down_movement: STARTUP_LAST_MOVEMENT,
             last_right_movement: STARTUP_LAST_MOVEMENT,
             last_left_movement: STARTUP_LAST_MOVEMENT,
+            unchecked_movement: true,
         })
         .id();
 
@@ -86,15 +91,12 @@ fn camera_follow(
 }
 
 fn player_movement(
-    commands: Commands, 
     mut player_query: Query<(&mut Player, &mut Transform)>,
     wall_query: Query<&Transform, (With<WallColider>, Without<Player>)>,
-    bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
-    bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (mut player, transform) = player_query.single_mut();
+    let (mut player, mut transform) = player_query.single_mut();
 
     let mut y_delta = 0.0;
     if keyboard.pressed(KeyCode::Up) {
@@ -124,13 +126,90 @@ fn player_movement(
         }
     }
 
-    let new_pos = transform.translation.clone();
-    let collision = move_if_not_collision_with_wall(Vec3::new(x_delta, y_delta, 0.0), player_query, &wall_query);
     if x_delta != 0.0 || y_delta != 0.0 {
+        let new_exact_position =
+            round_position(transform.translation.clone() + Vec3::new(x_delta, y_delta, 0.0));
+
+        let collision = check_wall_collision(&new_exact_position, &wall_query);
+
         if !collision {
-            check_if_on_bush(new_pos + Vec3::new(x_delta, y_delta, 0.0), commands, bush_query_transform, bush_query_entity);
+            transform.translation = transform.translation + Vec3::new(x_delta, y_delta, 0.0);
+            player.unchecked_movement = true;
         }
     }
+}
+
+fn player_interractions(
+    mut commands: Commands,
+    mut player_query: Query<(&mut Player, &mut Transform)>,
+    bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
+    bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>,
+    silver_key_query_transform: Query<&Transform, (With<SilverKeyDetect>, Without<Player>)>,
+    silver_key_query_entity: Query<Entity, (With<SilverKeyDetect>, Without<Player>)>,
+    gold_key_query_transform: Query<&Transform, (With<GoldKeyDetect>, Without<Player>)>,
+    gold_key_query_entity: Query<Entity, (With<GoldKeyDetect>, Without<Player>)>,
+) {
+    let (mut player, transform) = player_query.single_mut();
+    if player.unchecked_movement {
+
+        let new_exact_position =
+                round_position(transform.translation.clone());
+
+        // bushes destruction
+        for iter in bush_query_transform.iter().zip(bush_query_entity.iter()) {
+            let (bush_transform, bush_entity) = iter;
+
+            let bush_translation = round_position(bush_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &bush_translation);
+
+            if collision {
+                commands.entity(bush_entity).despawn(); // despawning bush if collision
+            }
+        }
+
+        // key pickup
+        for iter in silver_key_query_transform.iter().zip(silver_key_query_entity.iter()) {
+            let (silver_key_transform, silver_key_entity) = iter;
+    
+            let silver_key_translation = round_position(silver_key_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &silver_key_translation);
+    
+            if collision {
+                commands.entity(silver_key_entity).despawn(); // despawning bush if collision
+                player.silver_keys += 1;
+            }
+        }
+    
+        for iter in gold_key_query_transform.iter().zip(gold_key_query_entity.iter()) {
+            let (gold_key_transform, gold_key_entity) = iter;
+    
+            let gold_key_translation = round_position(gold_key_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &gold_key_translation);
+    
+            if collision {
+                commands.entity(gold_key_entity).despawn(); // despawning bush if collision
+                player.gold_keys += 1;
+            }
+        }
+
+        player.unchecked_movement = false;
+    }
+}
+
+// Checks if the player movement would cause the wall collision.
+fn check_wall_collision(
+    new_exact_position: &Vec3,
+    wall_query: &Query<&Transform, (With<WallColider>, Without<Player>)>,
+) -> bool {
+    for wall_transform in wall_query.iter() {
+        let wall_translation = round_position(wall_transform.translation.clone());
+        if check_simple_collision(&wall_translation, &new_exact_position) {
+            return true; // collision detected
+        }
+    }
+
+    // no collision
+    false
 }
 
 fn round_position(mut position: Vec3) -> Vec3 {
@@ -143,49 +222,4 @@ fn round_position(mut position: Vec3) -> Vec3 {
 
 fn check_simple_collision(position1: &Vec3, position2: &Vec3) -> bool {
     position1[0] == position2[0] && position1[1] == position2[1]
-}
-
-fn check_if_on_bush(
-    mut player_pos: Vec3,
-    mut commands: Commands, 
-    bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
-    bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>
-) {
-    for iter in bush_query_transform.iter().zip(bush_query_entity.iter()) {
-        let (bush_transform, bush_entity) = iter;
-
-        player_pos = round_position(player_pos);
-        let bush_translation = round_position(bush_transform.translation.clone());
-        let collision = check_simple_collision(&player_pos, &bush_translation);
-
-        if collision {
-            commands.entity(bush_entity).despawn(); // despawning bush if collision
-        }
-    }
-}
-
-// Checks if the player movement would cause the collision. If not, moves the player.
-fn move_if_not_collision_with_wall(
-    delta_position: Vec3,
-    mut player_query: Query<(&mut Player, &mut Transform)>,
-    wall_query: &Query<&Transform, (With<WallColider>, Without<Player>)>,
-) -> bool {
-    let (_, mut transform) = player_query.single_mut();
-    let new_player_pos = transform.translation + delta_position * 0.1;
-
-    for wall_transform in wall_query.iter() {
-        let collision = collide(
-            new_player_pos,
-            Vec2::splat(TILE_SIZE * 0.9),
-            wall_transform.translation,
-            Vec2::splat(TILE_SIZE),
-        );
-        if collision.is_some() {
-            return true; // collision detected
-        }
-    }
-    
-    // no collision - moving the player
-    transform.translation = transform.translation + delta_position;
-    false
 }

@@ -20,6 +20,9 @@ use textures::TexturesPlugin;
 mod bushes;
 use bushes::BushesPlugin;
 
+mod keys;
+use keys::KeysPlugin;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -36,6 +39,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(WorldMapPlugin)
         .add_plugin(BushesPlugin)
+        .add_plugin(KeysPlugin)
         .add_plugin(TexturesPlugin)
         .run();
 }

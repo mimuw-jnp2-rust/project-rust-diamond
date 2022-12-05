@@ -24,7 +24,7 @@ impl Plugin for WorldMapPlugin {
 
 // Creates map basing on /assets/map.txt file
 fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
-    let tiles_symbols = HashMap::from([('x', 5), ('o', 2), ('b', 2), ('0', 5)]);
+    let tiles_symbols = HashMap::from([('x', 5), ('o', 2), ('b', 2), ('0', 5), ('s', 2), ('g', 2)]);
 
     let file = File::open("assets/map.txt").expect("Couldn't open map asset!");
     let mut map_tiles = Vec::new();

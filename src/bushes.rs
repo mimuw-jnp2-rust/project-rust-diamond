@@ -22,14 +22,12 @@ impl Plugin for BushesPlugin {
 
 // Creates bushes vector and places bushes on the map, basing on /assets/map.txt file
 fn spawn_bushes(mut commands: Commands, texture: Res<CharacterTextures>) {
-
     let file = File::open("assets/map.txt").expect("Couldn't open map asset!");
     let mut bushes_storage = Vec::new();
 
     for (y, line) in BufReader::new(file).lines().enumerate() {
         if let Ok(line) = line {
             for (x, char) in line.chars().enumerate() {
-
                 if char == 'b' {
                     let bush = spawn_from_textures(
                         &mut commands,
