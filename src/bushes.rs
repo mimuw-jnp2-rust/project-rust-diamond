@@ -14,17 +14,9 @@ pub struct BushesPlugin;
 #[derive(Component)]
 pub struct BushCollider;
 
-// impl Plugin for BushesPlugin {
-//     fn build(&self, app: &mut App) {
-//         app.add_startup_system(spawn_bushes);
-//         app.add_startup_system(bushes_action);
-//     }
-// }
-
 impl Plugin for BushesPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_bushes);
-           // .add_system(bushes_destruction);
     }
 }
 
@@ -60,27 +52,3 @@ fn spawn_bushes(mut commands: Commands, texture: Res<CharacterTextures>) {
         .insert(GlobalTransform::default())
         .push_children(&bushes_storage);
 }
-
-// fn bushes_destruction(
-//     mut commands: Commands,
-//     mut bush_query: Query<Entity, With<BushCollider>>,
-//     //keyboard: Res<Input<KeyCode>>,
-// ) {
-//     for entity in bush_query.iter() {
-//     }
-//     // if keyboard.pressed(KeyCode::Up) {
-//     //     println!("A pressed.");
-//     //     destroy_bushes(commands, query);
-//     // }
-// }
-
-// pub fn destroy_bushes(
-//     mut commands: Commands,
-//     mut query: Query<Entity, With<BushCollider>>,
-// ) {
-//     println!("A pressed. I'm here.");
-//     for entity in query.iter() {
-//         println!("A pressed. I'm here inside.");
-//         commands.entity(entity).despawn();
-//     }
-// }
