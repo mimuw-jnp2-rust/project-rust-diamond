@@ -8,8 +8,8 @@ use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
 use crate::TILE_SIZE;
 
-pub const SILVER_KEY_IDX: usize = 12;
-pub const GOLD_KEY_IDX: usize = 13;
+pub const SILVER_KEY_IDX: usize = 4;
+pub const GOLD_KEY_IDX: usize = 10;
 
 pub struct KeysPlugin;
 

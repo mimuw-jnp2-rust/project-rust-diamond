@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate::TILE_SIZE;
 
-pub const TEXTURES_ROWS: usize = 4;
-pub const TEXTURES_COLUMNS: usize = 4;
+pub const TEXTURES_ROWS: usize = 5;
+pub const TEXTURES_COLUMNS: usize = 6;
 
 pub struct TexturesPlugin;
 
@@ -46,13 +46,13 @@ fn load_textures(
     assets: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
-    let image = assets.load("character16.png"); // TODO: adjust transparency
+    let image = assets.load("main_assets.png");
     let atlas = TextureAtlas::from_grid_with_padding(
         image,
-        Vec2::splat(42.0),
+        Vec2::splat(48.0),
         TEXTURES_COLUMNS,
         TEXTURES_ROWS,
-        Vec2::splat(7.0),
+        Vec2::splat(4.0),
     );
 
     let atlas_handle = texture_atlases.add(atlas);

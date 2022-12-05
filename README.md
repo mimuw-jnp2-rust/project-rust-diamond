@@ -34,5 +34,6 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 
 ## Credits
 Player assets thanks to: https://edermunizz.itch.io/pixel-art-rpg-character-creator
+Temple tiles assets thanks to: https://opengameart.org/
 
 Part one was created with assistance of following sources:

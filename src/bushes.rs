@@ -7,7 +7,7 @@ use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
 use crate::TILE_SIZE;
 
-pub const BUSH_IDX: usize = 3;
+pub const BUSH_IDX: usize = 17;
 
 pub struct BushesPlugin;
 
