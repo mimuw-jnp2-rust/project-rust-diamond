@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
 use crate::bushes::BushCollider;
-use crate::keys::SilverKeyDetect;
-use crate::keys::GoldKeyDetect;
+use crate::keys::KeyDetect;
+use crate::doors::DoorDetect;
 use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
 use crate::worldmap::WallColider;
@@ -26,8 +26,7 @@ pub struct Player {
     speed: f32,
     health: usize,
     diamonds: usize,
-    silver_keys: usize,
-    gold_keys: usize,
+    keys: usize,
     last_up_movement: f32,
     last_down_movement: f32,
     last_right_movement: f32,
@@ -59,8 +58,7 @@ fn spawn_player(mut commands: Commands, texture: Res<CharacterTextures>) {
             speed: PLAYER_SPEED,
             health: INIT_HEALTH,
             diamonds: 0,
-            silver_keys: 0,
-            gold_keys: 0,
+            keys: 0,
             last_up_movement: STARTUP_LAST_MOVEMENT,
             last_down_movement: STARTUP_LAST_MOVEMENT,
             last_right_movement: STARTUP_LAST_MOVEMENT,
@@ -93,6 +91,7 @@ fn camera_follow(
 fn player_movement(
     mut player_query: Query<(&mut Player, &mut Transform)>,
     wall_query: Query<&Transform, (With<WallColider>, Without<Player>)>,
+    door_query: Query<&Transform, (With<DoorDetect>, Without<Player>)>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
@@ -130,11 +129,17 @@ fn player_movement(
         let new_exact_position =
             round_position(transform.translation.clone() + Vec3::new(x_delta, y_delta, 0.0));
 
-        let collision = check_wall_collision(&new_exact_position, &wall_query);
+        let mut collision = check_wall_collision(&new_exact_position, &wall_query);
 
         if !collision {
-            transform.translation = transform.translation + Vec3::new(x_delta, y_delta, 0.0);
-            player.unchecked_movement = true;
+            if player.keys == 0 {
+                collision = check_door_collision(&new_exact_position, &door_query);
+            }
+
+            if !collision {
+                transform.translation = transform.translation + Vec3::new(x_delta, y_delta, 0.0);
+                player.unchecked_movement = true;
+            }
         }
     }
 }
@@ -144,10 +149,10 @@ fn player_interractions(
     mut player_query: Query<(&mut Player, &mut Transform)>,
     bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
     bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>,
-    silver_key_query_transform: Query<&Transform, (With<SilverKeyDetect>, Without<Player>)>,
-    silver_key_query_entity: Query<Entity, (With<SilverKeyDetect>, Without<Player>)>,
-    gold_key_query_transform: Query<&Transform, (With<GoldKeyDetect>, Without<Player>)>,
-    gold_key_query_entity: Query<Entity, (With<GoldKeyDetect>, Without<Player>)>,
+    key_query_transform: Query<&Transform, (With<KeyDetect>, Without<Player>)>,
+    key_query_entity: Query<Entity, (With<KeyDetect>, Without<Player>)>,
+    door_query_transform: Query<&Transform, (With<DoorDetect>, Without<Player>)>,
+    door_query_entity: Query<Entity, (With<DoorDetect>, Without<Player>)>,
 ) {
     let (mut player, transform) = player_query.single_mut();
     if player.unchecked_movement {
@@ -168,27 +173,28 @@ fn player_interractions(
         }
 
         // key pickup
-        for iter in silver_key_query_transform.iter().zip(silver_key_query_entity.iter()) {
-            let (silver_key_transform, silver_key_entity) = iter;
+        for iter in key_query_transform.iter().zip(key_query_entity.iter()) {
+            let (key_transform, key_entity) = iter;
     
-            let silver_key_translation = round_position(silver_key_transform.translation.clone());
-            let collision = check_simple_collision(&new_exact_position, &silver_key_translation);
+            let key_translation = round_position(key_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &key_translation);
     
             if collision {
-                commands.entity(silver_key_entity).despawn(); // despawning bush if collision
-                player.silver_keys += 1;
+                commands.entity(key_entity).despawn(); // despawning bush if collision
+                player.keys += 1;
             }
         }
+
+        // door check
+        for iter in door_query_transform.iter().zip(door_query_entity.iter()) {
+            let (door_transform, door_entity) = iter;
     
-        for iter in gold_key_query_transform.iter().zip(gold_key_query_entity.iter()) {
-            let (gold_key_transform, gold_key_entity) = iter;
-    
-            let gold_key_translation = round_position(gold_key_transform.translation.clone());
-            let collision = check_simple_collision(&new_exact_position, &gold_key_translation);
+            let door_translation = round_position(door_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &door_translation);
     
             if collision {
-                commands.entity(gold_key_entity).despawn(); // despawning bush if collision
-                player.gold_keys += 1;
+                commands.entity(door_entity).despawn(); // despawning bush if collision
+                player.keys -= 1;
             }
         }
 
@@ -202,6 +208,22 @@ fn check_wall_collision(
     wall_query: &Query<&Transform, (With<WallColider>, Without<Player>)>,
 ) -> bool {
     for wall_transform in wall_query.iter() {
+        let wall_translation = round_position(wall_transform.translation.clone());
+        if check_simple_collision(&wall_translation, &new_exact_position) {
+            return true; // collision detected
+        }
+    }
+
+    // no collision
+    false
+}
+
+// Checks if the player movement would cause the wall collision.
+fn check_door_collision(
+    new_exact_position: &Vec3,
+    door_query: &Query<&Transform, (With<DoorDetect>, Without<Player>)>,
+) -> bool {
+    for wall_transform in door_query.iter() {
         let wall_translation = round_position(wall_transform.translation.clone());
         if check_simple_collision(&wall_translation, &new_exact_position) {
             return true; // collision detected
