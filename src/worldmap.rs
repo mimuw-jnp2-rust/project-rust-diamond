@@ -11,12 +11,10 @@ use crate::TILE_SIZE;
 
 pub const EMPTY_IDX: usize = 10;
 
-pub const OBSTACLE_CHAR: char = 'x';
-
 pub struct WorldMapPlugin;
 
 #[derive(Component)]
-pub struct TileCollider;
+pub struct WallColider;
 
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
@@ -24,9 +22,9 @@ impl Plugin for WorldMapPlugin {
     }
 }
 
-// Creates basing on /assets/map.txt file
+// Creates map basing on /assets/map.txt file
 fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
-    let tiles_symbols = HashMap::from([(OBSTACLE_CHAR, 5), ('o', 2), ('b', 3)]);
+    let tiles_symbols = HashMap::from([('x', 5), ('o', 2), ('b', 2), ('0', 5)]);
 
     let file = File::open("assets/map.txt").expect("Couldn't open map asset!");
     let mut map_tiles = Vec::new();
@@ -48,8 +46,8 @@ fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
                     Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 100.0),
                 );
 
-                if char == OBSTACLE_CHAR {
-                    commands.entity(tile).insert(TileCollider);
+                if char == 'x' || char == '0' {
+                    commands.entity(tile).insert(WallColider);
                 }
 
                 map_tiles.push(tile);

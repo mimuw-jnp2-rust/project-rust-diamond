@@ -3,7 +3,8 @@ use bevy_inspector_egui::Inspectable;
 
 use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
-use crate::worldmap::TileCollider;
+use crate::worldmap::WallColider;
+use crate::bushes::BushCollider;
 use crate::TILE_SIZE;
 
 pub const PLAYER_SPEED: f32 = 10.0;
@@ -81,12 +82,15 @@ fn camera_follow(
 }
 
 fn player_movement(
+    commands: Commands, 
     mut player_query: Query<(&mut Player, &mut Transform)>,
-    wall_query: Query<&Transform, (With<TileCollider>, Without<Player>)>,
+    wall_query: Query<&Transform, (With<WallColider>, Without<Player>)>,
+    bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
+    bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
-    let (mut player, _) = player_query.single_mut();
+    let (mut player, transform) = player_query.single_mut();
 
     let mut y_delta = 0.0;
     if keyboard.pressed(KeyCode::Up) {
@@ -116,14 +120,51 @@ fn player_movement(
         }
     }
 
-    move_if_not_collision_with_wall(Vec3::new(x_delta, y_delta, 0.0), player_query, &wall_query);
+    let new_pos = transform.translation.clone();
+    let collision = move_if_not_collision_with_wall(Vec3::new(x_delta, y_delta, 0.0), player_query, &wall_query);
+    if x_delta != 0.0 || y_delta != 0.0 {
+        if !collision {
+            check_if_on_bush(new_pos + Vec3::new(x_delta, y_delta, 0.0), commands, bush_query_transform, bush_query_entity);
+        }
+    }
+}
+
+fn round_position(mut position: Vec3) -> Vec3 {
+    position *= 10.0;
+    position[0] = position[0].round();
+    position[1] = position[1].round();
+    position /= 10.0;
+    position
+}
+
+fn check_simple_collision(position1: &Vec3, position2: &Vec3) -> bool {
+    position1[0] == position2[0] && position1[1] == position2[1]
+}
+
+fn check_if_on_bush(
+    mut player_pos: Vec3,
+    mut commands: Commands, 
+    bush_query_transform: Query<&Transform, (With<BushCollider>, Without<Player>)>,
+    bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>
+) {
+    for iter in bush_query_transform.iter().zip(bush_query_entity.iter()) {
+        let (bush_transform, bush_entity) = iter;
+
+        player_pos = round_position(player_pos);
+        let bush_translation = round_position(bush_transform.translation.clone());
+        let collision = check_simple_collision(&player_pos, &bush_translation);
+
+        if collision {
+            commands.entity(bush_entity).despawn(); // despawning bush if collision
+        }
+    }
 }
 
 // Checks if the player movement would cause the collision. If not, moves the player.
 fn move_if_not_collision_with_wall(
     delta_position: Vec3,
     mut player_query: Query<(&mut Player, &mut Transform)>,
-    wall_query: &Query<&Transform, (With<TileCollider>, Without<Player>)>,
+    wall_query: &Query<&Transform, (With<WallColider>, Without<Player>)>,
 ) -> bool {
     let (_, mut transform) = player_query.single_mut();
     let new_player_pos = transform.translation + delta_position * 0.1;

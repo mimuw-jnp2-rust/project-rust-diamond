@@ -17,6 +17,9 @@ use worldmap::WorldMapPlugin;
 mod textures;
 use textures::TexturesPlugin;
 
+mod bushes;
+use bushes::BushesPlugin;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -32,6 +35,7 @@ fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(WorldMapPlugin)
+        .add_plugin(BushesPlugin)
         .add_plugin(TexturesPlugin)
         .run();
 }
