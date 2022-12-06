@@ -26,9 +26,6 @@ use keys::KeysPlugin;
 mod doors;
 use doors::DoorsPlugin;
 
-mod equipment;
-use equipment::EquipmentPlugin;
-
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -48,7 +45,6 @@ fn main() {
         .add_plugin(KeysPlugin)
         .add_plugin(DoorsPlugin)
         .add_plugin(TexturesPlugin)
-        .add_plugin(EquipmentPlugin)
         .run();
 }
 
