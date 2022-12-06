@@ -28,7 +28,14 @@ impl Plugin for WorldMapPlugin {
 
 // Creates map basing on /assets/map.txt file
 fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
-    let tiles_symbols = HashMap::from([('x', OBSTACLE_IDX), ('o', GRASS_IDX), ('b', GRASS_IDX), ('0', BRITLE_IDX), ('s', GRASS_IDX), ('g', GRASS_IDX)]);
+    let tiles_symbols = HashMap::from([
+        ('x', OBSTACLE_IDX),
+        ('o', GRASS_IDX),
+        ('b', GRASS_IDX),
+        ('0', BRITLE_IDX),
+        ('s', GRASS_IDX),
+        ('g', GRASS_IDX),
+    ]);
 
     let file = File::open("assets/map.txt").expect("Couldn't open map asset!");
     let mut map_tiles = Vec::new();

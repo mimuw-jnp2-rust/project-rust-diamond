@@ -37,9 +37,9 @@ fn spawn_doors(mut commands: Commands, texture: Res<CharacterTextures>) {
                         DOOR_IDX,
                         Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 160.0),
                     );
-                    
+
                     commands.entity(door).insert(DoorDetect);
-                    
+
                     doors_storage.push(door);
                 }
             }

@@ -37,9 +37,9 @@ fn spawn_keys(mut commands: Commands, texture: Res<CharacterTextures>) {
                         KEY_IDX,
                         Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 160.0),
                     );
-                    
+
                     commands.entity(key).insert(KeyDetect);
-                    
+
                     keys_storage.push(key);
                 }
             }

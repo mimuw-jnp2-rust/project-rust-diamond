@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
 use crate::bushes::BushCollider;
-use crate::keys::KeyDetect;
 use crate::doors::DoorDetect;
+use crate::keys::KeyDetect;
 use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
 use crate::worldmap::WallColider;
@@ -37,7 +37,11 @@ pub struct Player {
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
-            .add_system(camera_follow.after("player_movement").label("camera_follow"))
+            .add_system(
+                camera_follow
+                    .after("player_movement")
+                    .label("camera_follow"),
+            )
             .add_system(player_movement.label("player_movement"))
             .add_system(player_interractions.after("camera_follow"));
     }
@@ -156,9 +160,7 @@ fn player_interractions(
 ) {
     let (mut player, transform) = player_query.single_mut();
     if player.unchecked_movement {
-
-        let new_exact_position =
-                round_position(transform.translation.clone());
+        let new_exact_position = round_position(transform.translation.clone());
 
         // bushes destruction
         for iter in bush_query_transform.iter().zip(bush_query_entity.iter()) {
@@ -175,10 +177,10 @@ fn player_interractions(
         // key pickup
         for iter in key_query_transform.iter().zip(key_query_entity.iter()) {
             let (key_transform, key_entity) = iter;
-    
+
             let key_translation = round_position(key_transform.translation.clone());
             let collision = check_simple_collision(&new_exact_position, &key_translation);
-    
+
             if collision {
                 commands.entity(key_entity).despawn(); // despawning bush if collision
                 player.keys += 1;
@@ -188,10 +190,10 @@ fn player_interractions(
         // door check
         for iter in door_query_transform.iter().zip(door_query_entity.iter()) {
             let (door_transform, door_entity) = iter;
-    
+
             let door_translation = round_position(door_transform.translation.clone());
             let collision = check_simple_collision(&new_exact_position, &door_translation);
-    
+
             if collision {
                 commands.entity(door_entity).despawn(); // despawning bush if collision
                 player.keys -= 1;
