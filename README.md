@@ -25,13 +25,14 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 - Bevy
 - Serde
 
-## Part one progress
+## Part one progress (All planned features implemented)
 - Player movement. Player is moving to adjacent "grass" tiles. The non-continous movement (moving from one tile directly to the next one) is intentional.
 - Map creation. The map is created before the game and consists of wall (obstacles) and grass. The arrangement of tiles is determined by the text file (/assets/map.txt). The player can move only on "grass" tiles.
 - Bushes. Bushes occur on the map. They disapear when being stepped by the player.
 - Keys. There are keys to be found on the map. Player can collect them (they disapear from the map and are added to the player inventory).
 - Doors. Player can open door (it disappears from the map) in exchange for one of the keys from the equipment. With no keys player cannot go through the door.
 - Diamonds. Appear on the map. Player can collect them; they are added to the equipment.
+- Brittle obstacles. Only appear on the map (purple wall).
 - Inspector-egui debugging system. Allows to see components and data of entities on the screen. May be removed later. 
 
 ## Credits
