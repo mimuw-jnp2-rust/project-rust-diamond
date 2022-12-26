@@ -26,6 +26,9 @@ use keys::KeysPlugin;
 mod doors;
 use doors::DoorsPlugin;
 
+mod diamonds;
+use diamonds::DiamondsPlugin;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -44,6 +47,7 @@ fn main() {
         .add_plugin(BushesPlugin)
         .add_plugin(KeysPlugin)
         .add_plugin(DoorsPlugin)
+        .add_plugin(DiamondsPlugin)
         .add_plugin(TexturesPlugin)
         .run();
 }

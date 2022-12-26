@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
 use crate::bushes::BushCollider;
+use crate::diamonds::DiamondDetect;
 use crate::doors::DoorDetect;
 use crate::keys::KeyDetect;
 use crate::textures::spawn_from_textures;
@@ -155,6 +156,8 @@ fn player_interractions(
     bush_query_entity: Query<Entity, (With<BushCollider>, Without<Player>)>,
     key_query_transform: Query<&Transform, (With<KeyDetect>, Without<Player>)>,
     key_query_entity: Query<Entity, (With<KeyDetect>, Without<Player>)>,
+    diamond_query_transform: Query<&Transform, (With<DiamondDetect>, Without<Player>)>,
+    diamond_query_entity: Query<Entity, (With<DiamondDetect>, Without<Player>)>,
     door_query_transform: Query<&Transform, (With<DoorDetect>, Without<Player>)>,
     door_query_entity: Query<Entity, (With<DoorDetect>, Without<Player>)>,
 ) {
@@ -174,6 +177,19 @@ fn player_interractions(
             }
         }
 
+        // diamond pickup
+        for iter in diamond_query_transform.iter().zip(diamond_query_entity.iter()) {
+            let (diamond_transform, diamond_entity) = iter;
+
+            let diamond_translation = round_position(diamond_transform.translation.clone());
+            let collision = check_simple_collision(&new_exact_position, &diamond_translation);
+
+            if collision {
+                commands.entity(diamond_entity).despawn(); // despawning diamond if collision
+                player.diamonds += 1;
+            }
+        }
+
         // key pickup
         for iter in key_query_transform.iter().zip(key_query_entity.iter()) {
             let (key_transform, key_entity) = iter;
@@ -182,7 +198,7 @@ fn player_interractions(
             let collision = check_simple_collision(&new_exact_position, &key_translation);
 
             if collision {
-                commands.entity(key_entity).despawn(); // despawning bush if collision
+                commands.entity(key_entity).despawn(); // despawning key if collision
                 player.keys += 1;
             }
         }
