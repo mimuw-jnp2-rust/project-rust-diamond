@@ -26,7 +26,6 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 - Serde
 
 ## Part one progress (All planned features implemented)
-Note: Unfortunately I implemeted the last feature (diamonds) on 26.12 and in the last commit one of the files remained untract - diamonds.rs. I noticed it 3 days later (29.12) and added the file without changing it. Without this file the program doesn't compile (so the version from 26.12 is not compiling. The previos version is done on time (about 3 weeks ago) and it is compiling and does not contain (only) diamonds (i.e. points).
 - Player movement. Player is moving to adjacent "grass" tiles. The non-continous movement (moving from one tile directly to the next one) is intentional.
 - Map creation. The map is created before the game and consists of wall (obstacles) and grass. The arrangement of tiles is determined by the text file (/assets/map.txt). The player can move only on "grass" tiles.
 - Bushes. Bushes occur on the map. They disapear when being stepped by the player.
@@ -35,6 +34,12 @@ Note: Unfortunately I implemeted the last feature (diamonds) on 26.12 and in the
 - Diamonds. Appear on the map. Player can collect them; they are added to the equipment.
 - Brittle obstacles. Only appear on the map (purple wall).
 - Inspector-egui debugging system. Allows to see components and data of entities on the screen. May be removed later. 
+
+NOTE: Unfortunately I implemeted the last feature (diamonds) on 26.12 and in the last commit one of the files remained untract - diamonds.rs. I noticed it 3 days later (29.12) and added the file without changing it. Without this file the program doesn't compile (so the version from 26.12 is not compiling. The previous version is done on time (about 3 weeks ago) and it is compiling and does not contain (only) diamonds (i.e. points).
+
+![image](https://user-images.githubusercontent.com/71830127/210014793-7cff885b-921d-449a-973c-95a031701e5b.png)
+
+^ files were last edited on 26.12
 
 ## Credits
 Player assets thanks to: https://edermunizz.itch.io/pixel-art-rpg-character-creator
