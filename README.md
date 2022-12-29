@@ -35,7 +35,7 @@ I will also add riddles like the one at 07:54 in linked gameplay: https://www.yo
 - Brittle obstacles. Only appear on the map (purple wall).
 - Inspector-egui debugging system. Allows to see components and data of entities on the screen. May be removed later. 
 
-NOTE: Unfortunately I implemeted the last feature (diamonds) on 26.12 and in the last commit one of the files remained untract - diamonds.rs. I noticed it 3 days later (29.12) and added the file without changing it. Without this file the program doesn't compile (so the version from 26.12 is not compiling. The previous version is done on time (about 3 weeks ago) and it is compiling and does not contain (only) diamonds (i.e. points).
+NOTE: Unfortunately I implemeted the last feature (diamonds) on 26.12 and in the last commit one of the files remained untracted - diamonds.rs. I noticed it 3 days later (29.12) and added the file without changing it. Without this file the program doesn't compile (so the version from 26.12 is not compiling. The previous version is done on time (about 3 weeks ago) and it is compiling and does not contain (only) diamonds (i.e. points).
 
 ![image](https://user-images.githubusercontent.com/71830127/210014793-7cff885b-921d-449a-973c-95a031701e5b.png)
 
