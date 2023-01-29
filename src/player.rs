@@ -3,21 +3,20 @@ use bevy_inspector_egui::Inspectable;
 
 use crate::bushes::BushCollider;
 use crate::diamonds::DiamondDetect;
+use crate::doors::DoorDetect;
 use crate::enemy::Enemy;
 use crate::graphics::CharacterSheet;
 use crate::graphics::FacingDirection;
 use crate::graphics::FrameAnimation;
 use crate::graphics::PlayerGraphics;
+use crate::keys::KeyDetect;
 use crate::lives::LifeDetect;
 use crate::save_point::SavePointDetect;
-use crate::doors::DoorDetect;
-use crate::keys::KeyDetect;
 use crate::worldmap::WallColider;
 use crate::TILE_SIZE;
-use serde_json;
 use serde::*;
+use serde_json;
 use std::fs;
-
 
 pub const MINIMUM_MOVE_BREAK: f32 = 0.1;
 pub const MINIMUM_SPACE_BREAK: f32 = 1.;
@@ -83,7 +82,11 @@ fn spawn_player(mut commands: Commands, characters: Res<CharacterSheet>) {
                 custom_size: Some(Vec2::splat(TILE_SIZE)),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(START_TILE_X * TILE_SIZE, START_TILE_Y * TILE_SIZE, 900.0),
+            transform: Transform::from_xyz(
+                START_TILE_X * TILE_SIZE,
+                START_TILE_Y * TILE_SIZE,
+                900.0,
+            ),
             texture_atlas: characters.handle.clone(),
             ..Default::default()
         })
@@ -97,9 +100,8 @@ fn spawn_player(mut commands: Commands, characters: Res<CharacterSheet>) {
         })
         .insert(Name::new("Player"))
         .insert(player)
-            .id();
+        .id();
 }
-
 
 fn camera_follow(
     player_query: Query<&Transform, With<Player>>,
@@ -127,16 +129,13 @@ fn player_movement(
     if keyboard.pressed(KeyCode::Space) {
         if player.last_space_movement + MINIMUM_SPACE_BREAK <= time.seconds_since_startup() as f32 {
             player.last_space_movement = time.seconds_since_startup() as f32;
-            
+
             commands.entity(ent).despawn();
             spawn_player(commands, characters);
             return;
-            
         }
     }
     if !player.dead {
-        
-
         let mut y_delta = 0.0;
         if keyboard.pressed(KeyCode::Up) {
             if player.last_up_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32 {
@@ -145,7 +144,8 @@ fn player_movement(
             }
         }
         if keyboard.pressed(KeyCode::Down) {
-            if player.last_down_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32 {
+            if player.last_down_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32
+            {
                 y_delta -= TILE_SIZE;
                 player.last_down_movement = time.seconds_since_startup() as f32;
             }
@@ -153,14 +153,17 @@ fn player_movement(
 
         let mut x_delta = 0.0;
         if keyboard.pressed(KeyCode::Left) {
-            if player.last_left_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32 {
+            if player.last_left_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32
+            {
                 x_delta -= TILE_SIZE;
                 graphics.facing = FacingDirection::Left;
                 player.last_left_movement = time.seconds_since_startup() as f32;
             }
         }
         if keyboard.pressed(KeyCode::Right) {
-            if player.last_right_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32 {
+            if player.last_right_movement + MINIMUM_MOVE_BREAK
+                <= time.seconds_since_startup() as f32
+            {
                 x_delta += TILE_SIZE;
                 graphics.facing = FacingDirection::Right;
                 player.last_right_movement = time.seconds_since_startup() as f32;
@@ -179,7 +182,8 @@ fn player_movement(
                 }
 
                 if !collision {
-                    transform.translation = transform.translation + Vec3::new(x_delta, y_delta, 0.0);
+                    transform.translation =
+                        transform.translation + Vec3::new(x_delta, y_delta, 0.0);
                     player.unchecked_movement = true;
                 }
             }
@@ -189,10 +193,12 @@ fn player_movement(
 
         for iter in enemy_query_transform.iter().zip(enemy_query_entity.iter()) {
             let (enemy_transform, _) = iter;
-    
+
             let enemy_translation = round_position(enemy_transform.translation.clone());
             let collision = check_simple_collision(&new_exact_position, &enemy_translation);
-            if collision && player.health_lost + MINIMUM_LIFE_BREAK <= time.seconds_since_startup() as f32 {
+            if collision
+                && player.health_lost + MINIMUM_LIFE_BREAK <= time.seconds_since_startup() as f32
+            {
                 player.health_lost = time.seconds_since_startup() as f32;
                 player.health -= 1;
                 if player.health == 0 {
@@ -200,7 +206,7 @@ fn player_movement(
                 }
             }
         }
-    
+
         if player.health_lost + MINIMUM_LIFE_BREAK > time.seconds_since_startup() as f32 {
             if graphics.facing == FacingDirection::Left {
                 graphics.facing = FacingDirection::HitLeft;
@@ -212,8 +218,7 @@ fn player_movement(
         } else if graphics.facing == FacingDirection::HitRight {
             graphics.facing = FacingDirection::Right;
         }
-    }
-    else {
+    } else {
         graphics.facing = FacingDirection::Dead;
     }
 }
@@ -251,7 +256,10 @@ fn player_collisions(
         }
 
         // save_points destruction
-        for iter in save_point_query_transform.iter().zip(save_point_entity.iter()) {
+        for iter in save_point_query_transform
+            .iter()
+            .zip(save_point_entity.iter())
+        {
             let (save_point_transform, _) = iter;
 
             let save_point_translation = round_position(save_point_transform.translation.clone());
@@ -267,7 +275,10 @@ fn player_collisions(
         }
 
         // diamond pickup
-        for iter in diamond_query_transform.iter().zip(diamond_query_entity.iter()) {
+        for iter in diamond_query_transform
+            .iter()
+            .zip(diamond_query_entity.iter())
+        {
             let (diamond_transform, diamond_entity) = iter;
 
             let diamond_translation = round_position(diamond_transform.translation.clone());

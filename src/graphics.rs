@@ -17,7 +17,7 @@ pub enum FacingDirection {
     Right,
     Dead,
     HitRight,
-    HitLeft
+    HitLeft,
 }
 
 #[derive(Component)]
