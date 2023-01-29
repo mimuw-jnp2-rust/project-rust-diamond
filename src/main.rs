@@ -29,6 +29,18 @@ use doors::DoorsPlugin;
 mod diamonds;
 use diamonds::DiamondsPlugin;
 
+mod save_point;
+use save_point::SavePointPlugin;
+
+mod enemy;
+use enemy::EnemyPlugin;
+
+mod graphics;
+use graphics::GraphicsPlugin;
+
+mod lives;
+use lives::LivesPlugin;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -48,6 +60,10 @@ fn main() {
         .add_plugin(KeysPlugin)
         .add_plugin(DoorsPlugin)
         .add_plugin(DiamondsPlugin)
+        .add_plugin(SavePointPlugin)
+        .add_plugin(EnemyPlugin)
+        .add_plugin(GraphicsPlugin)
+        .add_plugin(LivesPlugin)
         .add_plugin(TexturesPlugin)
         .run();
 }
