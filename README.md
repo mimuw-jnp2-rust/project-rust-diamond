@@ -15,7 +15,8 @@
 - Lives. Player has lives that can be collected from the map. Lives are lost after collision with an enemy.
 - Animation. The player turns in the direction of movement. Steps are animated. After collision with an enemy (after losing a life) player turns red for a few seconds. During this time player cannot be hit again. After losing last life player is defeated and is not moving anymore.
 - Saving - loading system. Only the basics, state of the player (lives, diamonds etc. is saved using serde, every time player crosses the spawn point (= save point). To return there, with saved state press space bar. It is also possible after player death (for convenience).
-## Not implemented: Stones, and hammer.
+## Not implemented: 
+- Stones, and hammer.
 
 ## Authors
 - Krystyna Gasińska (@monty930 on GitHub)
