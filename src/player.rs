@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
-use serde::Serialize;
 
 use crate::bushes::BushCollider;
 use crate::diamonds::DiamondDetect;
