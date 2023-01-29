@@ -14,22 +14,21 @@ use crate::doors::DoorDetect;
 use crate::keys::KeyDetect;
 use crate::worldmap::WallColider;
 use crate::TILE_SIZE;
+use serde_json;
+use serde::*;
+use std::fs;
 
-pub const PLAYER_SPEED: f32 = 10.0;
 
 pub const MINIMUM_MOVE_BREAK: f32 = 0.1;
 pub const MINIMUM_SPACE_BREAK: f32 = 1.;
 pub const MINIMUM_LIFE_BREAK: f32 = 2.;
-pub const STARTUP_TIME: f32 = -100.0;
 
 pub const START_TILE_X: f32 = 2.0;
 pub const START_TILE_Y: f32 = -2.0;
 
-pub const INIT_HEALTH: usize = 3;
-
 pub struct PlayerPlugin;
 
-#[derive(Component, Inspectable)]
+#[derive(Component, Inspectable, Serialize, Deserialize)]
 pub struct Player {
     speed: f32,
     health: usize,
@@ -50,7 +49,8 @@ pub struct Player {
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_player)
+        app.add_startup_system(put_init_values_to_file)
+            .add_startup_system(spawn_player)
             .add_system(
                 camera_follow
                     .after("player_movement")
@@ -61,7 +61,21 @@ impl Plugin for PlayerPlugin {
     }
 }
 
+fn put_init_values_to_file() {
+    let data = "{\"speed\":10.0,\"health\":3,\"diamonds\":0,\"keys\":0,\"last_up_move\
+                    ment\":-100.0,\"last_down_movement\":-100.0,\"last_right_move\
+                    ment\":-100.0,\"last_left_movement\":-100.0,\"unchecked_move\
+                    ment\":true,\"space\":0,\"last_space_movement\":-100.0,\"on_sa\
+                    ve_point\":false,\"death_mode\":false,\"dead\":false,\"health_lost\":-100.0}";
+    let filename = "serialize";
+    fs::write(filename, data).expect("Unable to write file");
+}
+
 fn spawn_player(mut commands: Commands, characters: Res<CharacterSheet>) {
+    let filename = "serialize";
+    let context = fs::read_to_string(filename).expect("File not read.");
+    let player: Player = serde_json::from_str(&context).unwrap();
+
     commands
         .spawn_bundle(SpriteSheetBundle {
             sprite: TextureAtlasSprite {
@@ -82,25 +96,10 @@ fn spawn_player(mut commands: Commands, characters: Res<CharacterSheet>) {
             facing: FacingDirection::Right,
         })
         .insert(Name::new("Player"))
-        .insert(Player {
-                speed: PLAYER_SPEED,
-                health: INIT_HEALTH,
-                diamonds: 0,
-                keys: 0,
-                last_up_movement: STARTUP_TIME,
-                last_down_movement: STARTUP_TIME,
-                last_right_movement: STARTUP_TIME,
-                last_left_movement: STARTUP_TIME,
-                unchecked_movement: true,
-                space: 0,
-                last_space_movement: STARTUP_TIME,
-                on_save_point: false,
-                death_mode: false,
-                dead: false,
-                health_lost: STARTUP_TIME,
-            })
+        .insert(player)
             .id();
 }
+
 
 fn camera_follow(
     player_query: Query<&Transform, With<Player>>,
@@ -114,22 +113,29 @@ fn camera_follow(
 }
 
 fn player_movement(
-    mut player_query: Query<(&mut Player, &mut Transform, &mut PlayerGraphics)>,
+    mut player_query: Query<(&mut Player, &mut Transform, &mut PlayerGraphics, Entity)>,
     wall_query: Query<&Transform, (With<WallColider>, Without<Player>)>,
     door_query: Query<&Transform, (With<DoorDetect>, Without<Player>)>,
     enemy_query_transform: Query<&Transform, (With<Enemy>, Without<Player>)>,
     enemy_query_entity: Query<Entity, (With<Enemy>, Without<Player>)>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
+    mut commands: Commands,
+    characters: Res<CharacterSheet>,
 ) {
-    let (mut player, mut transform, mut graphics) = player_query.single_mut();
-    if !player.dead {
-        if keyboard.pressed(KeyCode::Space) {
-            if player.last_space_movement + MINIMUM_SPACE_BREAK <= time.seconds_since_startup() as f32 {
-                player.space += 1;
-                player.last_space_movement = time.seconds_since_startup() as f32;
-            }
+    let (mut player, mut transform, mut graphics, ent) = player_query.single_mut();
+    if keyboard.pressed(KeyCode::Space) {
+        if player.last_space_movement + MINIMUM_SPACE_BREAK <= time.seconds_since_startup() as f32 {
+            player.last_space_movement = time.seconds_since_startup() as f32;
+            
+            commands.entity(ent).despawn();
+            spawn_player(commands, characters);
+            return;
+            
         }
+    }
+    if !player.dead {
+        
 
         let mut y_delta = 0.0;
         if keyboard.pressed(KeyCode::Up) {
@@ -252,6 +258,12 @@ fn player_collisions(
             let collision = check_simple_collision(&new_exact_position, &save_point_translation);
 
             player.on_save_point = collision;
+            if collision {
+                // Saving game state...
+                let filename = "serialize";
+                let serialization = serde_json::to_string(player.as_ref());
+                fs::write(filename, serialization.unwrap()).expect("Unable to write file");
+            }
         }
 
         // diamond pickup
