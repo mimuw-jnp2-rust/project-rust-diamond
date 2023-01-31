@@ -49,7 +49,7 @@ fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
                 let mut tile_idx = EMPTY_IDX;
 
                 let find_idx = tiles_symbols.get(&char);
-                if !find_idx.is_none() {
+                if find_idx.is_some() {
                     tile_idx = *find_idx.unwrap();
                 }
 

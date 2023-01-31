@@ -18,7 +18,6 @@ use crate::worldmap::BritleWallDetector;
 use crate::worldmap::WallColider;
 use crate::TILE_SIZE;
 use serde::*;
-use serde_json;
 use std::fs;
 
 pub const MINIMUM_MOVE_BREAK: f32 = 0.1;

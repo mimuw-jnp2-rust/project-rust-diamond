@@ -27,10 +27,10 @@ pub fn spawn_from_textures(
 
     commands
         .spawn_bundle(SpriteSheetBundle {
-            sprite: sprite,
+            sprite,
             texture_atlas: texture.0.clone(),
             transform: Transform {
-                translation: translation,
+                translation,
                 ..Default::default()
             },
             ..Default::default()
