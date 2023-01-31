@@ -20,6 +20,9 @@ pub struct WorldMapPlugin;
 #[derive(Component)]
 pub struct WallColider;
 
+#[derive(Component)]
+pub struct BritleWallDetector;
+
 impl Plugin for WorldMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(create_map);
@@ -59,6 +62,16 @@ fn create_map(mut commands: Commands, texture: Res<CharacterTextures>) {
 
                 if char == 'x' || char == '0' {
                     commands.entity(tile).insert(WallColider);
+                    if char == '0' {
+                        let tile_background = spawn_from_textures(
+                            &mut commands,
+                            &texture,
+                            GRASS_IDX,
+                            Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 99.0),
+                        );
+                        map_tiles.push(tile_background);
+                        commands.entity(tile).insert(BritleWallDetector);
+                    }
                 }
 
                 map_tiles.push(tile);

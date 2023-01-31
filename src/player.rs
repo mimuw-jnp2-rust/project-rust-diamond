@@ -5,6 +5,8 @@ use crate::bushes::BushCollider;
 use crate::diamonds::DiamondDetect;
 use crate::doors::DoorDetect;
 use crate::enemy::Enemy;
+use crate::graphics::is_animation_left;
+use crate::graphics::AnimationDirection;
 use crate::graphics::CharacterSheet;
 use crate::graphics::FacingDirection;
 use crate::graphics::FrameAnimation;
@@ -12,6 +14,7 @@ use crate::graphics::PlayerGraphics;
 use crate::keys::KeyDetect;
 use crate::lives::LifeDetect;
 use crate::save_point::SavePointDetect;
+use crate::worldmap::BritleWallDetector;
 use crate::worldmap::WallColider;
 use crate::TILE_SIZE;
 use serde::*;
@@ -20,6 +23,7 @@ use std::fs;
 
 pub const MINIMUM_MOVE_BREAK: f32 = 0.1;
 pub const MINIMUM_SPACE_BREAK: f32 = 1.;
+pub const MINIMUM_HAMMER_BREAK: f32 = 0.3;
 pub const MINIMUM_LIFE_BREAK: f32 = 2.;
 
 pub const START_TILE_X: f32 = 2.0;
@@ -44,6 +48,7 @@ pub struct Player {
     death_mode: bool,
     dead: bool,
     health_lost: f32,
+    hammer_used: f32,
 }
 
 impl Plugin for PlayerPlugin {
@@ -65,7 +70,8 @@ fn put_init_values_to_file() {
                     ment\":-100.0,\"last_down_movement\":-100.0,\"last_right_move\
                     ment\":-100.0,\"last_left_movement\":-100.0,\"unchecked_move\
                     ment\":true,\"space\":0,\"last_space_movement\":-100.0,\"on_sa\
-                    ve_point\":false,\"death_mode\":false,\"dead\":false,\"health_lost\":-100.0}";
+                    ve_point\":false,\"death_mode\":false,\"dead\":false,\"health_lost\":-100.0\
+                    ,\"hammer_used\":-100.0}";
     let filename = "serialize";
     fs::write(filename, data).expect("Unable to write file");
 }
@@ -91,12 +97,15 @@ fn spawn_player(mut commands: Commands, characters: Res<CharacterSheet>) {
             ..Default::default()
         })
         .insert(FrameAnimation {
-            last_frame_time: Timer::from_seconds(0.2, true),
+            frame_timer: Timer::from_seconds(0.2, true),
             frames: characters.player_right.to_vec(),
             current_frame: 0,
+            instant_frame: false,
         })
         .insert(PlayerGraphics {
+            animation: AnimationDirection::Right,
             facing: FacingDirection::Right,
+            hammer_done: 0,
         })
         .insert(Name::new("Player"))
         .insert(player)
@@ -115,30 +124,82 @@ fn camera_follow(
 }
 
 fn player_movement(
-    mut player_query: Query<(&mut Player, &mut Transform, &mut PlayerGraphics, Entity)>,
+    mut player_query: Query<(
+        &mut Player,
+        &mut Transform,
+        &mut PlayerGraphics,
+        Entity,
+        &mut TextureAtlasSprite,
+    )>,
     wall_query: Query<&Transform, (With<WallColider>, Without<Player>)>,
     door_query: Query<&Transform, (With<DoorDetect>, Without<Player>)>,
     enemy_query_transform: Query<&Transform, (With<Enemy>, Without<Player>)>,
     enemy_query_entity: Query<Entity, (With<Enemy>, Without<Player>)>,
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
+    britle_query_transform: Query<&Transform, (With<BritleWallDetector>, Without<Player>)>,
+    britle_query_entity: Query<Entity, (With<BritleWallDetector>, Without<Player>)>,
     mut commands: Commands,
     characters: Res<CharacterSheet>,
 ) {
-    let (mut player, mut transform, mut graphics, ent) = player_query.single_mut();
+    let (mut player, mut transform, mut graphics, player_entity, mut texture) =
+        player_query.single_mut();
     if keyboard.pressed(KeyCode::Space) {
         if player.last_space_movement + MINIMUM_SPACE_BREAK <= time.seconds_since_startup() as f32 {
             player.last_space_movement = time.seconds_since_startup() as f32;
 
-            commands.entity(ent).despawn();
+            commands.entity(player_entity).despawn();
             spawn_player(commands, characters);
             return;
         }
     }
+
     if !player.dead {
+        if keyboard.pressed(KeyCode::X) {
+            if player.hammer_used + MINIMUM_HAMMER_BREAK <= time.seconds_since_startup() as f32 {
+                player.hammer_used = time.seconds_since_startup() as f32;
+                let animation_left;
+                (graphics, animation_left) = is_animation_left(graphics);
+                if animation_left {
+                    graphics.animation = AnimationDirection::HammerLeft;
+                    texture.index = characters.player_hammer_left.to_vec()[0];
+                } else {
+                    graphics.animation = AnimationDirection::HammerRight;
+                    texture.index = characters.player_hammer_right.to_vec()[0];
+                }
+
+                let hammer_direction;
+                hammer_direction = match graphics.facing {
+                    FacingDirection::Left => Vec3::new(-1.0 * TILE_SIZE, 0.0, 0.0),
+                    FacingDirection::Right => Vec3::new(1.0 * TILE_SIZE, 0.0, 0.0),
+                    FacingDirection::Up => Vec3::new(0.0, 1.0 * TILE_SIZE, 0.0),
+                    FacingDirection::Down => Vec3::new(0.0, -1.0 * TILE_SIZE, 0.0),
+                };
+
+                let position_to_check =
+                    round_position(transform.translation.clone() + hammer_direction);
+
+                // britle check
+                for iter in britle_query_transform
+                    .iter()
+                    .zip(britle_query_entity.iter())
+                {
+                    let (britle_transform, britle_entity) = iter;
+
+                    let britle_translation = round_position(britle_transform.translation.clone());
+                    let collision = check_simple_collision(&position_to_check, &britle_translation);
+
+                    if collision {
+                        commands.entity(britle_entity).despawn(); // despawning britle if hit by hammer
+                    }
+                }
+            }
+        }
+
         let mut y_delta = 0.0;
         if keyboard.pressed(KeyCode::Up) {
             if player.last_up_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32 {
+                graphics.facing = FacingDirection::Up;
                 y_delta += TILE_SIZE;
                 player.last_up_movement = time.seconds_since_startup() as f32;
             }
@@ -146,6 +207,7 @@ fn player_movement(
         if keyboard.pressed(KeyCode::Down) {
             if player.last_down_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32
             {
+                graphics.facing = FacingDirection::Down;
                 y_delta -= TILE_SIZE;
                 player.last_down_movement = time.seconds_since_startup() as f32;
             }
@@ -155,8 +217,14 @@ fn player_movement(
         if keyboard.pressed(KeyCode::Left) {
             if player.last_left_movement + MINIMUM_MOVE_BREAK <= time.seconds_since_startup() as f32
             {
-                x_delta -= TILE_SIZE;
                 graphics.facing = FacingDirection::Left;
+                x_delta -= TILE_SIZE;
+                let animation_left;
+                (graphics, animation_left) = is_animation_left(graphics);
+                if !animation_left {
+                    graphics.animation = AnimationDirection::Left;
+                    texture.index = characters.player_left.to_vec()[0];
+                }
                 player.last_left_movement = time.seconds_since_startup() as f32;
             }
         }
@@ -164,8 +232,14 @@ fn player_movement(
             if player.last_right_movement + MINIMUM_MOVE_BREAK
                 <= time.seconds_since_startup() as f32
             {
-                x_delta += TILE_SIZE;
                 graphics.facing = FacingDirection::Right;
+                x_delta += TILE_SIZE;
+                let animation_left;
+                (graphics, animation_left) = is_animation_left(graphics);
+                if animation_left {
+                    graphics.animation = AnimationDirection::Right;
+                    texture.index = characters.player_right.to_vec()[0];
+                }
                 player.last_right_movement = time.seconds_since_startup() as f32;
             }
         }
@@ -208,18 +282,18 @@ fn player_movement(
         }
 
         if player.health_lost + MINIMUM_LIFE_BREAK > time.seconds_since_startup() as f32 {
-            if graphics.facing == FacingDirection::Left {
-                graphics.facing = FacingDirection::HitLeft;
-            } else if graphics.facing == FacingDirection::Right {
-                graphics.facing = FacingDirection::HitRight;
+            if graphics.animation == AnimationDirection::Left {
+                graphics.animation = AnimationDirection::HitLeft;
+            } else if graphics.animation == AnimationDirection::Right {
+                graphics.animation = AnimationDirection::HitRight;
             }
-        } else if graphics.facing == FacingDirection::HitLeft {
-            graphics.facing = FacingDirection::Left;
-        } else if graphics.facing == FacingDirection::HitRight {
-            graphics.facing = FacingDirection::Right;
+        } else if graphics.animation == AnimationDirection::HitLeft {
+            graphics.animation = AnimationDirection::Left;
+        } else if graphics.animation == AnimationDirection::HitRight {
+            graphics.animation = AnimationDirection::Right;
         }
     } else {
-        graphics.facing = FacingDirection::Dead;
+        graphics.animation = AnimationDirection::Dead;
     }
 }
 
@@ -349,7 +423,7 @@ pub fn would_collide_with_wall(
     false
 }
 
-// Checks if the player movement would cause the wall collision.
+// Checks if the player movement would cause the door collision.
 pub fn would_collide_with_door(
     new_exact_position: &Vec3,
     door_query: &Query<&Transform, (With<DoorDetect>, Without<Player>)>,

@@ -8,7 +8,7 @@ use crate::textures::CharacterTextures;
 use crate::worldmap::WallColider;
 use crate::TILE_SIZE;
 
-pub const ENEMY_IDX: usize = 28;
+pub const ENEMY_IDX: usize = 29;
 pub const MINIMUM_ENEMY_MOVEMENT_BREAK: f32 = 0.2;
 
 pub struct EnemyPlugin;
@@ -29,11 +29,7 @@ impl Plugin for EnemyPlugin {
 }
 
 fn enemy_spawn_system(mut commands: Commands, texture: Res<CharacterTextures>) {
-    let enemies = vec![
-        Vec3::new(1., 1., 0.),
-        Vec3::new(7., 1., 0.),
-        Vec3::new(28., 11., 1.),
-    ];
+    let enemies = vec![Vec3::new(7., 1., 0.), Vec3::new(28., 11., 1.), Vec3::new(2., 11., 1.), Vec3::new(16., 11., 1.)];
 
     for v in enemies {
         let x = v.x;
