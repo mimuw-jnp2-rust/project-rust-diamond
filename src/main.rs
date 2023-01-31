@@ -41,6 +41,9 @@ use graphics::GraphicsPlugin;
 mod lives;
 use lives::LivesPlugin;
 
+mod stones;
+use stones::StonesPlugin;
+
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -64,6 +67,7 @@ fn main() {
         .add_plugin(EnemyPlugin)
         .add_plugin(GraphicsPlugin)
         .add_plugin(LivesPlugin)
+        .add_plugin(StonesPlugin)
         .add_plugin(TexturesPlugin)
         .run();
 }

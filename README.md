@@ -17,7 +17,7 @@
 - Animation. The player turns in the direction of movement. Steps are animated. After collision with an enemy (after losing a life) player turns red for a few seconds. During this time player cannot be hit again. After losing last life player is defeated and is not moving anymore. Using hammer is also animated (the hammer usage is animated even if nothing is being destroyed).
 - Saving - loading system. Only the basics, state of the player (lives, diamonds etc. is saved using serde, every time player crosses the spawn point (= save point). To return there, with saved state press space bar. It is also possible after player death (for convenience).
 ## Not implemented: 
-- Stones.
+- Stones. They appear on the map but act like a wall. Their textures are generated randomly.
 
 ## Authors
 - Krystyna Gasińska (@monty930 on GitHub)

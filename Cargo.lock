@@ -1275,6 +1275,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "phf",
+ "rand",
  "serde",
  "serde_derive",
  "serde_json",
