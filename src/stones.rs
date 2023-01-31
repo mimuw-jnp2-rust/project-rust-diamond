@@ -6,8 +6,8 @@ use std::io::BufReader;
 
 use crate::textures::spawn_from_textures;
 use crate::textures::CharacterTextures;
-use crate::TILE_SIZE;
 use crate::worldmap::WallColider;
+use crate::TILE_SIZE;
 
 const STONE_IDX: [&'static usize; 5] = [&13, &14, &15, &16, &3];
 
@@ -40,7 +40,11 @@ fn spawn_stones(mut commands: Commands, texture: Res<CharacterTextures>) {
                         Vec3::new(x as f32 * TILE_SIZE, -(y as f32) * TILE_SIZE, 150.0),
                     );
 
-                    commands.entity(stone).insert(StoneSystem).insert(WallColider).id();
+                    commands
+                        .entity(stone)
+                        .insert(StoneSystem)
+                        .insert(WallColider)
+                        .id();
                     stones_storage.push(stone);
                 }
             }

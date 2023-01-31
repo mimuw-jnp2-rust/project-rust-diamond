@@ -29,7 +29,12 @@ impl Plugin for EnemyPlugin {
 }
 
 fn enemy_spawn_system(mut commands: Commands, texture: Res<CharacterTextures>) {
-    let enemies = vec![Vec3::new(7., 1., 0.), Vec3::new(28., 11., 1.), Vec3::new(2., 11., 1.), Vec3::new(16., 11., 1.)];
+    let enemies = vec![
+        Vec3::new(7., 1., 0.),
+        Vec3::new(28., 11., 1.),
+        Vec3::new(2., 11., 1.),
+        Vec3::new(16., 11., 1.),
+    ];
 
     for v in enemies {
         let x = v.x;

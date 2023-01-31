@@ -8,7 +8,6 @@ use crate::textures::CharacterTextures;
 use crate::TILE_SIZE;
 
 pub const BUSH_IDX: usize = 17;
-
 pub struct BushesPlugin;
 
 #[derive(Component)]
